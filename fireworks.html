@@ -10,6 +10,10 @@
 
   <div class="game-header">
     <a class="back-btn" href="index.html" style="background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.3)">🏠</a>
+    <div class="game-star-bar" style="background:rgba(0,0,0,0.3)">
+      <span class="star-icon">⭐</span>
+      <span class="star-count">0</span>
+    </div>
     <span class="game-title-float" style="color:rgba(255,255,255,0.4)">🎆 烟花秀</span>
   </div>
 
@@ -24,6 +28,8 @@
     const rockets = [];
     const particles = [];
 
+    ZZ.updateStarDisplay();
+
     function resize() {
       const s = ZZ.resizeCanvas(canvas);
       W = s.w; H = s.h;
@@ -31,51 +37,128 @@
     resize();
     window.addEventListener('resize', resize);
 
+    // 烟花类型
+    const fireworkTypes = ['sphere', 'ring', 'heart', 'chrysanthemum', 'willow', 'star', 'zhuzhu'];
+
     class Rocket {
       constructor(x, targetY) {
         this.x = x;
         this.y = H;
         this.targetY = targetY;
-        this.vy = -ZZ.rand(8, 14);
+        this.vy = -ZZ.rand(10, 16);
         this.color = ZZ.randColor();
         this.alive = true;
         this.trail = [];
+        this.type = Math.random() < 0.12 ? 'zhuzhu' : fireworkTypes[Math.floor(Math.random() * 6)];
       }
       update() {
         this.trail.push({ x: this.x, y: this.y, life: 1 });
-        if (this.trail.length > 12) this.trail.shift();
-        this.trail.forEach(t => t.life -= 0.08);
-
+        if (this.trail.length > 16) this.trail.shift();
+        this.trail.forEach(t => t.life -= 0.06);
         this.y += this.vy;
-        this.vy += 0.15;
+        this.vy += 0.2;
         if (this.vy >= 0 || this.y <= this.targetY) {
           this.explode();
           this.alive = false;
         }
       }
       explode() {
-        const count = Math.floor(ZZ.rand(30, 60));
-        const isZhuzhu = Math.random() < 0.15;
-        for (let i = 0; i < count; i++) {
-          const angle = (Math.PI * 2 / count) * i;
-          const speed = ZZ.rand(1.5, isZhuzhu ? 3 : 5);
-          particles.push(new Particle(
-            this.x, this.y,
-            Math.cos(angle) * speed,
-            Math.sin(angle) * speed,
-            isZhuzhu ? '#FF6B9D' : this.color,
-            isZhuzhu ? 4 : ZZ.rand(2, 4)
-          ));
+        const cx = this.x;
+        const cy = this.y;
+        const color = this.color;
+        const type = this.type;
+
+        if (type === 'zhuzhu') {
+          // 竹竹烟花 - 心形 + 文字
+          this.emitHeart(cx, cy, '#FF6B9D', 50);
+          showZhuzhuFirework(cx, cy);
+          ZZ.flyStar(cx, cy - 30, 5);
+        } else if (type === 'sphere') {
+          this.emitSphere(cx, cy, color, 80);
+          ZZ.flyStar(cx, cy - 20, 1);
+        } else if (type === 'ring') {
+          this.emitRing(cx, cy, color, 50);
+          ZZ.flyStar(cx, cy - 20, 1);
+        } else if (type === 'heart') {
+          this.emitHeart(cx, cy, color, 40);
+          ZZ.flyStar(cx, cy - 20, 2);
+        } else if (type === 'chrysanthemum') {
+          this.emitChrysanthemum(cx, cy, color, 60);
+          ZZ.flyStar(cx, cy - 20, 2);
+        } else if (type === 'willow') {
+          this.emitWillow(cx, cy, color, 40);
+          ZZ.flyStar(cx, cy - 20, 1);
+        } else if (type === 'star') {
+          this.emitStar(cx, cy, color, 40);
+          ZZ.flyStar(cx, cy - 20, 2);
         }
-        if (isZhuzhu) {
-          // 竹竹烟花 - 显示文字
-          showZhuzhuFirework(this.x, this.y);
-        }
+
         ZZ.playFirework();
         ZZ.vibrate(40);
       }
+
+      emitSphere(cx, cy, color, count) {
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 / count) * i;
+          const speed = ZZ.rand(2, 5);
+          particles.push(new Particle(cx, cy, Math.cos(angle) * speed, Math.sin(angle) * speed, color, ZZ.rand(2, 4), 0.015, 0.03));
+        }
+      }
+
+      emitRing(cx, cy, color, count) {
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 / count) * i;
+          const speed = 4;
+          particles.push(new Particle(cx, cy, Math.cos(angle) * speed, Math.sin(angle) * speed, color, 3, 0.012, 0.04));
+        }
+        // 内圈
+        for (let i = 0; i < count / 2; i++) {
+          const angle = (Math.PI * 2 / (count / 2)) * i;
+          const speed = 2;
+          particles.push(new Particle(cx, cy, Math.cos(angle) * speed, Math.sin(angle) * speed, '#fff', 2, 0.02, 0.03));
+        }
+      }
+
+      emitHeart(cx, cy, color, count) {
+        for (let i = 0; i < count; i++) {
+          const t = (Math.PI * 2 / count) * i;
+          // 心形参数方程
+          const hx = 16 * Math.pow(Math.sin(t), 3);
+          const hy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+          const scale = 0.25;
+          particles.push(new Particle(cx, cy, hx * scale, hy * scale, color, ZZ.rand(2, 4), 0.01, 0.02));
+        }
+      }
+
+      emitChrysanthemum(cx, cy, color, count) {
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 / count) * i;
+          const speed = ZZ.rand(1, 6);
+          particles.push(new Particle(cx, cy, Math.cos(angle) * speed, Math.sin(angle) * speed, color, ZZ.rand(1.5, 3), 0.008, 0.05));
+        }
+      }
+
+      emitWillow(cx, cy, color, count) {
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 / count) * i;
+          const speed = ZZ.rand(1, 3);
+          const p = new Particle(cx, cy, Math.cos(angle) * speed, Math.sin(angle) * speed, color, ZZ.rand(1, 2.5), 0.006, 0.08);
+          p.gravity = 0.06;
+          particles.push(p);
+        }
+      }
+
+      emitStar(cx, cy, color, count) {
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 / count) * i;
+          // 五角星效果 - 交替长短
+          const isLong = i % 2 === 0;
+          const speed = isLong ? ZZ.rand(4, 6) : ZZ.rand(1.5, 2.5);
+          particles.push(new Particle(cx, cy, Math.cos(angle) * speed, Math.sin(angle) * speed, isLong ? color : '#FFF9C4', isLong ? 3 : 2, 0.012, 0.03));
+        }
+      }
+
       draw(ctx) {
-        // trail
         this.trail.forEach(t => {
           ctx.save();
           ctx.globalAlpha = t.life * 0.6;
@@ -85,7 +168,6 @@
           ctx.fill();
           ctx.restore();
         });
-        // head
         ctx.beginPath();
         ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
         ctx.fillStyle = '#fff';
@@ -94,7 +176,7 @@
     }
 
     class Particle {
-      constructor(x, y, vx, vy, color, size) {
+      constructor(x, y, vx, vy, color, size, decay, gravity) {
         this.x = x;
         this.y = y;
         this.vx = vx;
@@ -102,10 +184,13 @@
         this.color = color;
         this.size = size || 2;
         this.life = 1;
-        this.decay = ZZ.rand(0.01, 0.025);
-        this.gravity = 0.04;
+        this.decay = decay || 0.015;
+        this.gravity = gravity || 0.04;
+        this.trail = [];
       }
       update() {
+        this.trail.push({ x: this.x, y: this.y, life: 0.4 });
+        if (this.trail.length > 4) this.trail.shift();
         this.vx *= 0.98;
         this.vy *= 0.98;
         this.vy += this.gravity;
@@ -114,15 +199,24 @@
         this.life -= this.decay;
       }
       draw(ctx) {
+        // 拖尾
+        this.trail.forEach((t, i) => {
+          ctx.save();
+          ctx.globalAlpha = t.life * this.life * 0.3;
+          ctx.beginPath();
+          ctx.arc(t.x, t.y, this.size * 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+          ctx.restore();
+        });
+        // 粒子
         ctx.save();
         ctx.globalAlpha = this.life;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
-        ctx.fill();
-        // glow
         ctx.shadowColor = this.color;
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 8;
         ctx.fill();
         ctx.restore();
       }
@@ -139,9 +233,9 @@
       document.body.appendChild(el);
       setTimeout(() => el.remove(), 1500);
       ZZ.playCheer();
+      ZZ.speak('竹竹的烟花！');
     }
 
-    // 点击发射烟花
     canvas.addEventListener('pointerdown', (e) => {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -150,60 +244,60 @@
       ZZ.maybeCheer(5);
     });
 
-    // 自动放一个小烟花（首次引导）
+    // 首次引导烟花
     setTimeout(() => {
       rockets.push(new Rocket(W / 2, H * 0.3));
+      setTimeout(() => rockets.push(new Rocket(W * 0.3, H * 0.25)), 400);
+      setTimeout(() => rockets.push(new Rocket(W * 0.7, H * 0.28)), 800);
     }, 800);
 
+    // 星星背景
+    const stars = [];
+    function initStars() {
+      for (let i = 0; i < 80; i++) {
+        stars.push({ x: ZZ.rand(0, W), y: ZZ.rand(0, H), r: ZZ.rand(0.3, 1.5), twinkle: ZZ.rand(0, Math.PI * 2), speed: ZZ.rand(0.02, 0.06) });
+      }
+    }
+    initStars();
+
     function animate() {
-      // 半透明覆盖产生拖尾效果
-      ctx.fillStyle = 'rgba(13, 27, 42, 0.2)';
+      // 暗色拖尾
+      ctx.fillStyle = 'rgba(13, 27, 42, 0.15)';
       ctx.fillRect(0, 0, W, H);
 
-      // 星星背景
-      if (Math.random() < 0.02) {
-        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      // 星星
+      stars.forEach(s => {
+        s.twinkle += s.speed;
+        const alpha = 0.3 + Math.sin(s.twinkle) * 0.3;
+        ctx.save();
+        ctx.globalAlpha = alpha;
         ctx.beginPath();
-        ctx.arc(ZZ.rand(0, W), ZZ.rand(0, H * 0.5), 1, 0, Math.PI * 2);
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
         ctx.fill();
-      }
+        ctx.restore();
+      });
 
-      // 更新火箭
+      // 火箭
       for (let i = rockets.length - 1; i >= 0; i--) {
         rockets[i].update();
-        if (!rockets[i].alive) {
-          rockets.splice(i, 1);
-        } else {
-          rockets[i].draw(ctx);
-        }
+        if (!rockets[i].alive) rockets.splice(i, 1);
+        else rockets[i].draw(ctx);
       }
 
-      // 更新粒子
+      // 粒子
       for (let i = particles.length - 1; i >= 0; i--) {
         particles[i].update();
-        if (particles[i].life <= 0) {
-          particles.splice(i, 1);
-        } else {
-          particles[i].draw(ctx);
-        }
+        if (particles[i].life <= 0) particles.splice(i, 1);
+        else particles[i].draw(ctx);
       }
 
       requestAnimationFrame(animate);
     }
 
-    // 初始绘制星空
-    function drawStars() {
-      ctx.fillStyle = '#0D1B2A';
-      ctx.fillRect(0, 0, W, H);
-      for (let i = 0; i < 60; i++) {
-        ctx.fillStyle = `rgba(255,255,255,${ZZ.rand(0.1, 0.5)})`;
-        ctx.beginPath();
-        ctx.arc(ZZ.rand(0, W), ZZ.rand(0, H), ZZ.rand(0.5, 1.5), 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    drawStars();
-
+    // 初始绘制
+    ctx.fillStyle = '#0D1B2A';
+    ctx.fillRect(0, 0, W, H);
     animate();
   </script>
 </body>

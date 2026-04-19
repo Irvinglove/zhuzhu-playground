@@ -1,5 +1,5 @@
 /* ============================================
-   竹竹的游乐场 - 共享样式
+   竹竹的游乐场 - 共享样式 v2
    ============================================ */
 
 :root {
@@ -39,33 +39,69 @@ html, body {
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
-  padding: 20px;
+  padding: 16px 16px 24px;
   background: linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 50%, #A5D6A7 100%);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .home-title {
-  font-size: 2.2rem;
+  font-size: 2rem;
   color: var(--bamboo-dark);
   text-shadow: 2px 2px 0 rgba(255,255,255,0.6);
-  margin: 10px 0 5px;
-  position: relative;
+  margin: 8px 0 4px;
 }
 
 .home-subtitle {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--bamboo-light);
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
-/* 熊猫吉祥物 */
+/* 星星积分栏 */
+.star-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.7);
+  padding: 6px 16px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.star-bar .star-icon {
+  font-size: 1.3rem;
+}
+
+.star-bar .star-count {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #F9A825;
+}
+
+.star-bar .star-label {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+/* 熊猫吉祥物 - 改为大可点击区域 */
 .panda-mascot {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   position: relative;
-  margin: 10px auto 20px;
+  margin: 8px auto 14px;
   cursor: pointer;
   animation: panda-bounce 2s ease-in-out infinite;
+  /* 增大可点击热区 */
+  padding: 10px;
+}
+
+.panda-mascot::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
 }
 
 @keyframes panda-bounce {
@@ -84,46 +120,46 @@ html, body {
 }
 
 .panda-head {
-  width: 80px;
-  height: 72px;
+  width: 90px;
+  height: 80px;
   background: white;
   border-radius: 50%;
   position: absolute;
-  top: 28px;
-  left: 10px;
+  top: 32px;
+  left: 15px;
   border: 3px solid var(--panda-black);
   z-index: 2;
 }
 
 .panda-ear {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   background: var(--panda-black);
   border-radius: 50%;
   position: absolute;
-  top: 12px;
+  top: 14px;
   z-index: 1;
 }
 
-.panda-ear.left { left: 6px; }
-.panda-ear.right { right: 6px; }
+.panda-ear.left { left: 8px; }
+.panda-ear.right { right: 8px; }
 
 .panda-eye {
-  width: 22px;
-  height: 18px;
+  width: 24px;
+  height: 20px;
   background: var(--panda-black);
   border-radius: 50%;
   position: absolute;
-  top: 44px;
+  top: 50px;
   z-index: 3;
 }
 
-.panda-eye.left { left: 24px; }
-.panda-eye.right { right: 24px; }
+.panda-eye.left { left: 28px; }
+.panda-eye.right { right: 28px; }
 
 .panda-eye-shine {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   background: white;
   border-radius: 50%;
   position: absolute;
@@ -132,39 +168,39 @@ html, body {
 }
 
 .panda-nose {
-  width: 14px;
-  height: 10px;
+  width: 16px;
+  height: 11px;
   background: var(--panda-black);
   border-radius: 50%;
   position: absolute;
-  top: 60px;
-  left: 43px;
+  top: 68px;
+  left: 52px;
   z-index: 3;
 }
 
 .panda-mouth {
-  width: 20px;
+  width: 22px;
   height: 10px;
   border-bottom: 2px solid var(--panda-black);
   border-radius: 0 0 50% 50%;
   position: absolute;
-  top: 68px;
-  left: 40px;
+  top: 76px;
+  left: 49px;
   z-index: 3;
 }
 
 .panda-blush {
-  width: 16px;
-  height: 10px;
+  width: 18px;
+  height: 11px;
   background: rgba(255, 107, 157, 0.4);
   border-radius: 50%;
   position: absolute;
-  top: 62px;
+  top: 70px;
   z-index: 3;
 }
 
-.panda-blush.left { left: 12px; }
-.panda-blush.right { right: 12px; }
+.panda-blush.left { left: 16px; }
+.panda-blush.right { right: 16px; }
 
 /* 竹子装饰 */
 .bamboo-deco {
@@ -208,10 +244,10 @@ html, body {
 .game-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 14px;
   max-width: 400px;
   width: 100%;
-  padding: 0 10px;
+  padding: 0 8px;
   position: relative;
   z-index: 1;
 }
@@ -219,7 +255,7 @@ html, body {
 .game-card {
   background: white;
   border-radius: 20px;
-  padding: 24px 16px;
+  padding: 22px 14px;
   text-align: center;
   box-shadow: 0 4px 15px rgba(46, 125, 50, 0.15);
   cursor: pointer;
@@ -228,8 +264,9 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   border: 2px solid transparent;
+  min-height: 100px;
 }
 
 .game-card:last-child {
@@ -250,19 +287,19 @@ html, body {
 .game-card:nth-child(5) { border-color: #FF7043; }
 
 .game-icon {
-  font-size: 3rem;
+  font-size: 2.8rem;
   line-height: 1;
 }
 
 .game-name {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--bamboo-dark);
 }
 
 .game-desc {
-  font-size: 0.75rem;
-  color: #888;
+  font-size: 0.7rem;
+  color: #999;
 }
 
 /* ---- 游戏页通用 ---- */
@@ -315,6 +352,29 @@ html, body {
   font-weight: 600;
 }
 
+/* 游戏内星星条 */
+.game-star-bar {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.8);
+  padding: 4px 14px;
+  border-radius: 16px;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.game-star-bar .star-icon { font-size: 1rem; }
+.game-star-bar .star-count {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #F9A825;
+}
+
 /* 鼓励语 */
 .encouragement {
   position: fixed;
@@ -331,6 +391,21 @@ html, body {
   0% { opacity: 1; transform: translateY(0) scale(0.5); }
   30% { opacity: 1; transform: translateY(-20px) scale(1.2); }
   100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
+}
+
+/* 星星飞出 */
+.star-fly {
+  position: fixed;
+  pointer-events: none;
+  z-index: 101;
+  font-size: 1.5rem;
+  animation: star-fly-anim 0.8s ease-out forwards;
+}
+
+@keyframes star-fly-anim {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  50% { opacity: 1; transform: translateY(-30px) scale(1.5); }
+  100% { opacity: 0; transform: translateY(-70px) scale(0.6); }
 }
 
 /* 通用游戏区域 canvas */
@@ -363,28 +438,31 @@ html, body {
 
 /* ---- 响应式 ---- */
 @media (min-width: 600px) {
-  .home-title { font-size: 2.8rem; }
-  .game-grid { max-width: 500px; gap: 20px; }
-  .game-card { padding: 30px 20px; }
-  .game-icon { font-size: 3.5rem; }
+  .home-title { font-size: 2.6rem; }
+  .game-grid { max-width: 500px; gap: 18px; }
+  .game-card { padding: 28px 18px; }
+  .game-icon { font-size: 3.2rem; }
 }
 
 @media (max-height: 600px) {
-  .panda-mascot { width: 70px; height: 70px; margin: 5px auto 10px; }
-  .panda-head { width: 56px; height: 50px; top: 20px; left: 7px; }
-  .panda-ear { width: 22px; height: 22px; top: 8px; }
-  .panda-ear.left { left: 4px; }
-  .panda-ear.right { right: 4px; }
-  .panda-eye { width: 16px; height: 13px; top: 32px; }
-  .panda-eye.left { left: 17px; }
-  .panda-eye.right { right: 17px; }
-  .panda-nose { top: 44px; left: 30px; width: 10px; height: 7px; }
-  .panda-mouth { top: 49px; left: 28px; }
-  .panda-blush { top: 44px; width: 12px; height: 7px; }
-  .panda-blush.left { left: 8px; }
-  .panda-blush.right { right: 8px; }
-  .home-title { font-size: 1.8rem; margin: 5px 0; }
-  .home-subtitle { margin-bottom: 10px; }
-  .game-grid { gap: 10px; }
-  .game-card { padding: 16px 10px; }
+  .panda-mascot { width: 90px; height: 90px; margin: 4px auto 8px; padding: 6px; }
+  .panda-head { width: 68px; height: 60px; top: 24px; left: 11px; }
+  .panda-ear { width: 26px; height: 26px; top: 10px; }
+  .panda-ear.left { left: 6px; }
+  .panda-ear.right { right: 6px; }
+  .panda-eye { width: 18px; height: 15px; top: 38px; }
+  .panda-eye.left { left: 21px; }
+  .panda-eye.right { right: 21px; }
+  .panda-nose { top: 52px; left: 39px; width: 12px; height: 8px; }
+  .panda-mouth { top: 58px; left: 37px; }
+  .panda-blush { top: 52px; width: 14px; height: 8px; }
+  .panda-blush.left { left: 12px; }
+  .panda-blush.right { right: 12px; }
+  .home-title { font-size: 1.6rem; margin: 4px 0; }
+  .home-subtitle { margin-bottom: 6px; font-size: 0.75rem; }
+  .game-grid { gap: 8px; }
+  .game-card { padding: 14px 8px; min-height: 80px; }
+  .game-icon { font-size: 2.2rem; }
+  .game-name { font-size: 1rem; }
+  .star-bar { margin-bottom: 6px; padding: 4px 12px; }
 }

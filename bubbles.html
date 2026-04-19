@@ -10,6 +10,10 @@
 
   <div class="game-header">
     <a class="back-btn" href="index.html">🏠</a>
+    <div class="game-star-bar">
+      <span class="star-icon">⭐</span>
+      <span class="star-count">0</span>
+    </div>
     <span class="game-title-float">🫧 泡泡乐</span>
   </div>
 
@@ -22,7 +26,12 @@
     const ctx = canvas.getContext('2d');
     let W, H;
     const bubbles = [];
-    const popParticles = [];
+    const effects = [];
+    let score = 0;
+    let combo = 0;
+    let comboTimer = null;
+
+    ZZ.updateStarDisplay();
 
     function resize() {
       const s = ZZ.resizeCanvas(canvas);
@@ -32,119 +41,230 @@
     window.addEventListener('resize', resize);
 
     class Bubble {
-      constructor(x, y) {
+      constructor(x, y, type = 'normal') {
         this.x = x;
         this.y = y;
-        this.r = ZZ.rand(25, 60);
-        this.color = ZZ.randColor();
+        this.type = type;
+        this.r = type === 'big' ? ZZ.rand(50, 80) : ZZ.rand(20, 45);
+        this.color = type === 'rainbow' ? '#FFD700' : ZZ.randColor();
         this.vx = ZZ.rand(-0.5, 0.5);
-        this.vy = ZZ.rand(-1.5, -0.5);
+        this.vy = ZZ.rand(-1.8, -0.6);
         this.wobble = ZZ.rand(0, Math.PI * 2);
         this.wobbleSpeed = ZZ.rand(0.02, 0.05);
         this.alive = true;
-        this.opacity = 0.85;
-        this.hasZhuzhu = Math.random() < 0.12;
+        this.opacity = 0.9;
+        this.hasZhuzhu = Math.random() < 0.1;
+        this.taps = type === 'big' ? 3 : 1; // 大泡泡需要点3次
+        this.tapped = 0;
+        this.hue = ZZ.rand(0, 360); // 彩虹泡泡用
       }
       update() {
         this.wobble += this.wobbleSpeed;
         this.x += this.vx + Math.sin(this.wobble) * 0.5;
         this.y += this.vy;
-        this.opacity -= 0.002;
-        if (this.y + this.r < 0 || this.opacity <= 0) this.alive = false;
+        this.opacity -= 0.003;
+        if (this.type === 'rainbow') this.hue = (this.hue + 2) % 360;
+        if (this.y + this.r < -20 || this.opacity <= 0) this.alive = false;
       }
       draw(ctx) {
         ctx.save();
         ctx.globalAlpha = this.opacity;
-        // bubble body
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-        const grad = ctx.createRadialGradient(
-          this.x - this.r * 0.3, this.y - this.r * 0.3, this.r * 0.1,
-          this.x, this.y, this.r
-        );
-        grad.addColorStop(0, 'rgba(255,255,255,0.6)');
-        grad.addColorStop(0.5, this.color + '88');
-        grad.addColorStop(1, this.color + '22');
-        ctx.fillStyle = grad;
-        ctx.fill();
-        // shine
+
+        if (this.type === 'rainbow') {
+          // 彩虹泡泡
+          const grad = ctx.createRadialGradient(
+            this.x - this.r * 0.2, this.y - this.r * 0.2, this.r * 0.1,
+            this.x, this.y, this.r
+          );
+          grad.addColorStop(0, `hsla(${this.hue}, 90%, 80%, 0.7)`);
+          grad.addColorStop(0.5, `hsla(${(this.hue + 60) % 360}, 90%, 60%, 0.5)`);
+          grad.addColorStop(1, `hsla(${(this.hue + 120) % 360}, 80%, 50%, 0.2)`);
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+          // ✨闪闪
+          ctx.strokeStyle = `hsla(${this.hue}, 100%, 80%, 0.5)`;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+          const grad = ctx.createRadialGradient(
+            this.x - this.r * 0.3, this.y - this.r * 0.3, this.r * 0.1,
+            this.x, this.y, this.r
+          );
+          grad.addColorStop(0, 'rgba(255,255,255,0.5)');
+          grad.addColorStop(0.5, this.color + '88');
+          grad.addColorStop(1, this.color + '22');
+          ctx.fillStyle = grad;
+          ctx.fill();
+        }
+
+        // 高光
         ctx.beginPath();
         ctx.arc(this.x - this.r * 0.25, this.y - this.r * 0.25, this.r * 0.18, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
         ctx.fill();
-        // 竹竹名字
-        if (this.hasZhuzhu) {
+
+        // 大泡泡显示剩余点击次数
+        if (this.type === 'big' && this.taps > 1) {
           ctx.fillStyle = 'rgba(255,255,255,0.9)';
-          ctx.font = `${Math.max(12, this.r * 0.5)}px "PingFang SC", sans-serif`;
+          ctx.font = `bold ${Math.max(14, this.r * 0.4)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const remaining = this.taps - this.tapped;
+          ctx.fillText(remaining > 1 ? remaining + '' : '💥', this.x, this.y);
+        }
+
+        // 竹竹名字
+        if (this.hasZhuzhu && this.type !== 'big') {
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.font = `bold ${Math.max(11, this.r * 0.45)}px "PingFang SC", sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText('竹竹', this.x, this.y);
         }
+
         ctx.restore();
+      }
+      hitTest(px, py) {
+        const dx = px - this.x;
+        const dy = py - this.y;
+        return dx * dx + dy * dy < this.r * this.r;
       }
     }
 
-    class PopParticle {
-      constructor(x, y, color) {
+    class Effect {
+      constructor(x, y, type) {
         this.x = x;
         this.y = y;
-        this.color = color;
-        this.r = ZZ.rand(2, 5);
-        const angle = ZZ.rand(0, Math.PI * 2);
-        const speed = ZZ.rand(1, 4);
-        this.vx = Math.cos(angle) * speed;
-        this.vy = Math.sin(angle) * speed;
+        this.type = type;
         this.life = 1;
+        this.particles = [];
+        if (type === 'pop') {
+          for (let i = 0; i < 10; i++) {
+            const angle = ZZ.rand(0, Math.PI * 2);
+            const speed = ZZ.rand(2, 5);
+            this.particles.push({
+              x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+              r: ZZ.rand(2, 5), color: ZZ.randColor()
+            });
+          }
+        } else if (type === 'combo') {
+          // 连击效果
+          for (let i = 0; i < 15; i++) {
+            const angle = ZZ.rand(0, Math.PI * 2);
+            const speed = ZZ.rand(3, 7);
+            this.particles.push({
+              x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+              r: ZZ.rand(3, 7), color: '#FFD700'
+            });
+          }
+        }
       }
       update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.vy += 0.05;
         this.life -= 0.03;
+        this.particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.05;
+          p.vx *= 0.98;
+        });
       }
       draw(ctx) {
         ctx.save();
         ctx.globalAlpha = this.life;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
+        this.particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * this.life, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+        });
         ctx.restore();
       }
     }
 
+    // 连击文字
+    function showCombo(x, y, n) {
+      const el = document.createElement('div');
+      el.className = 'encouragement';
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      if (n >= 5) {
+        el.textContent = '🔥 竹竹连击×' + n + '！';
+        el.style.fontSize = '2.5rem';
+        el.style.color = '#FF6B9D';
+      } else {
+        el.textContent = '✨ 连击×' + n;
+        el.style.fontSize = '1.8rem';
+        el.style.color = '#FF9800';
+      }
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1500);
+    }
+
     // 生成泡泡
     function spawnBubbles(x, y) {
-      const count = Math.floor(ZZ.rand(3, 7));
+      const roll = Math.random();
+      let type = 'normal';
+      if (roll < 0.08) type = 'rainbow';
+      else if (roll < 0.15) type = 'big';
+
+      const count = type === 'big' ? 1 : Math.floor(ZZ.rand(3, 7));
       for (let i = 0; i < count; i++) {
         const bx = x + ZZ.rand(-40, 40);
         const by = y + ZZ.rand(-30, 30);
-        bubbles.push(new Bubble(bx, by));
+        bubbles.push(new Bubble(bx, by, i === 0 ? type : 'normal'));
       }
       ZZ.playBubble();
       ZZ.vibrate(15);
-      ZZ.maybeCheer();
     }
 
     // 戳破泡泡
     function tryPopBubble(x, y) {
       for (let i = bubbles.length - 1; i >= 0; i--) {
         const b = bubbles[i];
-        const dx = x - b.x;
-        const dy = y - b.y;
-        if (dx * dx + dy * dy < b.r * b.r) {
-          // pop!
-          for (let j = 0; j < 8; j++) {
-            popParticles.push(new PopParticle(b.x, b.y, b.color));
-          }
-          if (b.hasZhuzhu) {
-            ZZ.showEncouragement();
-            ZZ.playCheer();
+        if (b.hitTest(x, y)) {
+          b.tapped++;
+          if (b.tapped >= b.taps) {
+            // 戳破了！
+            effects.push(new Effect(b.x, b.y, 'pop'));
+
+            // 连击
+            combo++;
+            clearTimeout(comboTimer);
+            comboTimer = setTimeout(() => { combo = 0; }, 1500);
+
+            if (combo >= 3) {
+              showCombo(x, y - 40, combo);
+              effects.push(new Effect(x, y, 'combo'));
+            }
+
+            // 积分
+            let pts = 1;
+            if (b.type === 'rainbow') { pts = 3; ZZ.speak('彩虹泡泡！'); }
+            else if (b.type === 'big') { pts = 5; ZZ.speak('大泡泡！'); }
+            if (combo >= 3) pts += combo;
+            score += pts;
+            ZZ.flyStar(x, y - 20, pts);
+
+            if (b.hasZhuzhu) {
+              ZZ.showEncouragement();
+              ZZ.playCheer();
+            } else {
+              ZZ.playPop();
+            }
+
+            ZZ.vibrate(20);
+            bubbles.splice(i, 1);
           } else {
-            ZZ.playPop();
+            // 大泡泡还没破 - 摇晃
+            b.vx += ZZ.rand(-2, 2);
+            b.vy += ZZ.rand(-1, 0);
+            ZZ.playBubble();
+            ZZ.vibrate(10);
           }
-          ZZ.vibrate(20);
-          bubbles.splice(i, 1);
           return true;
         }
       }
@@ -158,36 +278,29 @@
       if (!tryPopBubble(x, y)) {
         spawnBubbles(x, y);
       }
+      ZZ.maybeCheer();
     });
 
-    // 自动生成小泡泡营造氛围
+    // 自动氛围泡泡
     setInterval(() => {
-      if (bubbles.length < 5) {
+      if (bubbles.length < 4) {
         bubbles.push(new Bubble(ZZ.rand(0, W), H + 30));
       }
-    }, 2000);
+    }, 2500);
 
     function animate() {
       ctx.clearRect(0, 0, W, H);
 
-      // 更新和绘制泡泡
       for (let i = bubbles.length - 1; i >= 0; i--) {
         bubbles[i].update();
-        if (!bubbles[i].alive) {
-          bubbles.splice(i, 1);
-        } else {
-          bubbles[i].draw(ctx);
-        }
+        if (!bubbles[i].alive) bubbles.splice(i, 1);
+        else bubbles[i].draw(ctx);
       }
 
-      // 更新和绘制爆裂粒子
-      for (let i = popParticles.length - 1; i >= 0; i--) {
-        popParticles[i].update();
-        if (popParticles[i].life <= 0) {
-          popParticles.splice(i, 1);
-        } else {
-          popParticles[i].draw(ctx);
-        }
+      for (let i = effects.length - 1; i >= 0; i--) {
+        effects[i].update();
+        if (effects[i].life <= 0) effects.splice(i, 1);
+        else effects[i].draw(ctx);
       }
 
       requestAnimationFrame(animate);

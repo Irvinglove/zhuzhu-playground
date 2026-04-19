@@ -47,6 +47,13 @@
   <h1 class="home-title">🎋 竹竹的游乐场</h1>
   <p class="home-subtitle">— 选一个游戏开始玩吧 —</p>
 
+  <!-- 星星积分 -->
+  <div class="star-bar">
+    <span class="star-icon">⭐</span>
+    <span class="star-count">0</span>
+    <span class="star-label">竹竹的星星</span>
+  </div>
+
   <!-- 熊猫吉祥物 -->
   <div class="panda-mascot" id="panda" title="点我有惊喜！">
     <div class="panda-ear left"></div>
@@ -94,6 +101,9 @@
 
   <script src="common.js"></script>
   <script>
+    // 显示星星
+    ZZ.updateStarDisplay();
+
     // 点熊猫彩蛋
     let pandaClicks = 0;
     document.getElementById('panda').addEventListener('pointerdown', () => {
@@ -103,6 +113,9 @@
         ZZ.showEncouragement();
         ZZ.playCheer();
         ZZ.speak('竹竹你好呀！');
+        // 给星星
+        const rect = document.getElementById('panda').getBoundingClientRect();
+        ZZ.flyStar(rect.left + rect.width / 2, rect.top, 1);
       } else {
         ZZ.playBubble();
       }
