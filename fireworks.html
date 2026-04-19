@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>烟花秀 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="game-page" style="background:#0D1B2A">
+
+  <div class="game-header">
+    <a class="back-btn" href="index.html" style="background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.3)">🏠</a>
+    <span class="game-title-float" style="color:rgba(255,255,255,0.4)">🎆 烟花秀</span>
+  </div>
+
+  <canvas class="game-canvas" id="canvas"></canvas>
+  <div class="zhuzhu-stamp" style="color:rgba(255,255,255,0.15)">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    const rockets = [];
+    const particles = [];
+
+    function resize() {
+      const s = ZZ.resizeCanvas(canvas);
+      W = s.w; H = s.h;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Rocket {
+      constructor(x, targetY) {
+        this.x = x;
+        this.y = H;
+        this.targetY = targetY;
+        this.vy = -ZZ.rand(8, 14);
+        this.color = ZZ.randColor();
+        this.alive = true;
+        this.trail = [];
+      }
+      update() {
+        this.trail.push({ x: this.x, y: this.y, life: 1 });
+        if (this.trail.length > 12) this.trail.shift();
+        this.trail.forEach(t => t.life -= 0.08);
+
+        this.y += this.vy;
+        this.vy += 0.15;
+        if (this.vy >= 0 || this.y <= this.targetY) {
+          this.explode();
+          this.alive = false;
+        }
+      }
+      explode() {
+        const count = Math.floor(ZZ.rand(30, 60));
+        const isZhuzhu = Math.random() < 0.15;
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 / count) * i;
+          const speed = ZZ.rand(1.5, isZhuzhu ? 3 : 5);
+          particles.push(new Particle(
+            this.x, this.y,
+            Math.cos(angle) * speed,
+            Math.sin(angle) * speed,
+            isZhuzhu ? '#FF6B9D' : this.color,
+            isZhuzhu ? 4 : ZZ.rand(2, 4)
+          ));
+        }
+        if (isZhuzhu) {
+          // 竹竹烟花 - 显示文字
+          showZhuzhuFirework(this.x, this.y);
+        }
+        ZZ.playFirework();
+        ZZ.vibrate(40);
+      }
+      draw(ctx) {
+        // trail
+        this.trail.forEach(t => {
+          ctx.save();
+          ctx.globalAlpha = t.life * 0.6;
+          ctx.beginPath();
+          ctx.arc(t.x, t.y, 2, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+          ctx.restore();
+        });
+        // head
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+      }
+    }
+
+    class Particle {
+      constructor(x, y, vx, vy, color, size) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color;
+        this.size = size || 2;
+        this.life = 1;
+        this.decay = ZZ.rand(0.01, 0.025);
+        this.gravity = 0.04;
+      }
+      update() {
+        this.vx *= 0.98;
+        this.vy *= 0.98;
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life -= this.decay;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.life;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        // glow
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 6;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function showZhuzhuFirework(x, y) {
+      const el = document.createElement('div');
+      el.className = 'encouragement';
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.textContent = '竹竹✨';
+      el.style.fontSize = '2.5rem';
+      el.style.color = '#FF6B9D';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1500);
+      ZZ.playCheer();
+    }
+
+    // 点击发射烟花
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      rockets.push(new Rocket(x + ZZ.rand(-20, 20), y));
+      ZZ.maybeCheer(5);
+    });
+
+    // 自动放一个小烟花（首次引导）
+    setTimeout(() => {
+      rockets.push(new Rocket(W / 2, H * 0.3));
+    }, 800);
+
+    function animate() {
+      // 半透明覆盖产生拖尾效果
+      ctx.fillStyle = 'rgba(13, 27, 42, 0.2)';
+      ctx.fillRect(0, 0, W, H);
+
+      // 星星背景
+      if (Math.random() < 0.02) {
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.beginPath();
+        ctx.arc(ZZ.rand(0, W), ZZ.rand(0, H * 0.5), 1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 更新火箭
+      for (let i = rockets.length - 1; i >= 0; i--) {
+        rockets[i].update();
+        if (!rockets[i].alive) {
+          rockets.splice(i, 1);
+        } else {
+          rockets[i].draw(ctx);
+        }
+      }
+
+      // 更新粒子
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        if (particles[i].life <= 0) {
+          particles.splice(i, 1);
+        } else {
+          particles[i].draw(ctx);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // 初始绘制星空
+    function drawStars() {
+      ctx.fillStyle = '#0D1B2A';
+      ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < 60; i++) {
+        ctx.fillStyle = `rgba(255,255,255,${ZZ.rand(0.1, 0.5)})`;
+        ctx.beginPath();
+        ctx.arc(ZZ.rand(0, W), ZZ.rand(0, H), ZZ.rand(0.5, 1.5), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    drawStars();
+
+    animate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>钢琴键 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .piano-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 10px 6px 20px;
+      overflow: hidden;
+    }
+    .piano-greeting {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--bamboo-dark);
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+    .piano-keys {
+      display: flex;
+      gap: 5px;
+      width: 100%;
+    }
+    .piano-key {
+      flex: 1;
+      height: 45vh;
+      border-radius: 0 0 18px 18px;
+      cursor: pointer;
+      transition: transform 0.08s, filter 0.08s;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .piano-key:active {
+      transform: scaleY(0.97) translateY(4px);
+      filter: brightness(1.15);
+    }
+    .piano-key .key-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .piano-key .key-emoji {
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+    .piano-key .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      transform: scale(0);
+      animation: key-ripple 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes key-ripple {
+      to { transform: scale(4); opacity: 0; }
+    }
+    .note-fly {
+      position: fixed;
+      font-size: 1.5rem;
+      pointer-events: none;
+      z-index: 100;
+      animation: note-fly-up 1s ease-out forwards;
+    }
+    @keyframes note-fly-up {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-60px) scale(1.5); }
+    }
+  </style>
+</head>
+<body class="game-page" style="background: linear-gradient(180deg, #F3E5F5, #E8EAF6)">
+
+  <div class="game-header">
+    <a class="back-btn" href="index.html">🏠</a>
+    <span class="game-title-float">🎹 竹竹的小钢琴</span>
+  </div>
+
+  <div class="game-dom-area">
+    <div class="piano-wrap">
+      <div class="piano-greeting" id="greeting">🎵 竹竹来弹琴！</div>
+      <div class="piano-keys" id="pianoKeys"></div>
+    </div>
+  </div>
+  <div class="zhuzhu-stamp">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script>
+    const notes = [
+      { color: '#EF5350', label: 'Do', emoji: '🔴', note: 0 },
+      { color: '#FF7043', label: 'Re', emoji: '🟠', note: 2 },
+      { color: '#FFA726', label: 'Mi', emoji: '🟡', note: 4 },
+      { color: '#66BB6A', label: 'Fa', emoji: '🟢', note: 5 },
+      { color: '#42A5F5', label: 'Sol', emoji: '🔵', note: 7 },
+      { color: '#AB47BC', label: 'La', emoji: '🟣', note: 9 },
+      { color: '#EC407A', label: 'Si', emoji: '💗', note: 11 },
+    ];
+
+    const container = document.getElementById('pianoKeys');
+    const greetings = [
+      '竹竹弹得好好听！', '竹竹是小音乐家！',
+      '再来再来！', '竹竹好棒！',
+      '好听好听！', '🎵 竹竹加油！',
+    ];
+    let playCount = 0;
+
+    notes.forEach((n, idx) => {
+      const key = document.createElement('div');
+      key.className = 'piano-key';
+      key.style.background = `linear-gradient(180deg, ${n.color}, ${n.color}dd)`;
+      key.style.boxShadow = `0 6px 0 ${n.color}99, 0 8px 20px rgba(0,0,0,0.12)`;
+      key.innerHTML = `
+        <span class="key-emoji">${n.emoji}</span>
+        <span class="key-label">${n.label}</span>
+      `;
+
+      key.addEventListener('pointerdown', (e) => {
+        ZZ.playPianoNote(n.note);
+        ZZ.vibrate(20);
+        playCount++;
+
+        // 按键波纹
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+        const rect = key.getBoundingClientRect();
+        ripple.style.width = '50px';
+        ripple.style.height = '50px';
+        ripple.style.left = (e.clientX - rect.left - 25) + 'px';
+        ripple.style.top = (e.clientY - rect.top - 25) + 'px';
+        key.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+
+        // 飞出音符
+        const noteEl = document.createElement('div');
+        noteEl.className = 'note-fly';
+        noteEl.textContent = ['♪', '♫', '♩', '♬'][Math.floor(Math.random() * 4)];
+        noteEl.style.left = (e.clientX - 10) + 'px';
+        noteEl.style.top = (e.clientY - 20) + 'px';
+        noteEl.style.color = n.color;
+        document.body.appendChild(noteEl);
+        setTimeout(() => noteEl.remove(), 1000);
+
+        // 更换鼓励语
+        if (playCount % 8 === 0) {
+          const g = document.getElementById('greeting');
+          g.textContent = greetings[Math.floor(Math.random() * greetings.length)];
+          g.style.animation = 'none';
+          void g.offsetWidth;
+          g.style.animation = 'float-up 0.5s ease';
+        }
+
+        ZZ.maybeCheer(6);
+      });
+
+      container.appendChild(key);
+    });
+  </script>
+</body>
+</html>

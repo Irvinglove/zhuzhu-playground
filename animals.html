@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>动物叫声 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .animals-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      padding: 14px;
+      flex: 1;
+      align-content: center;
+    }
+    .animal-btn {
+      background: white;
+      border-radius: 22px;
+      padding: 18px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: transform 0.12s;
+      border: 3px solid transparent;
+    }
+    .animal-btn:active {
+      transform: scale(0.92);
+    }
+    .animal-btn .emoji {
+      font-size: 3.5rem;
+      line-height: 1;
+      transition: transform 0.2s;
+    }
+    .animal-btn:active .emoji {
+      transform: scale(1.3);
+    }
+    .animal-btn .name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #333;
+    }
+    .animal-btn.active {
+      border-color: var(--warm-orange);
+      animation: shake 0.4s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: rotate(0); }
+      25% { transform: rotate(-5deg); }
+      75% { transform: rotate(5deg); }
+    }
+    .animal-speak-bubble {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: rgba(255,255,255,0.95);
+      padding: 16px 28px;
+      border-radius: 20px;
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--warm-pink);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      z-index: 200;
+      animation: bubble-pop 0.8s ease forwards;
+      pointer-events: none;
+    }
+    @keyframes bubble-pop {
+      0% { transform: translate(-50%, -50%) scale(0); }
+      40% { transform: translate(-50%, -50%) scale(1.2); }
+      60% { transform: translate(-50%, -50%) scale(1); }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="game-page" style="background: linear-gradient(180deg, #FFF8E1, #FFF3E0)">
+
+  <div class="game-header">
+    <a class="back-btn" href="index.html">🏠</a>
+    <span class="game-title-float">🐼 动物叫声</span>
+  </div>
+
+  <div class="game-dom-area">
+    <div class="animals-grid" id="animalsGrid"></div>
+  </div>
+  <div class="zhuzhu-stamp">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script>
+    const animals = [
+      { emoji: '🐶', name: '小狗', sound: '汪汪！', color: '#FF9800' },
+      { emoji: '🐱', name: '小猫', sound: '喵喵～', color: '#42A5F5' },
+      { emoji: '🐮', name: '奶牛', sound: '哞～', color: '#8D6E63' },
+      { emoji: '🐷', name: '小猪', sound: '哼哼！', color: '#E91E63' },
+      { emoji: '🐸', name: '青蛙', sound: '呱呱！', color: '#4CAF50' },
+      { emoji: '🐔', name: '小鸡', sound: '叽叽！', color: '#FFC107' },
+      { emoji: '🐑', name: '小羊', sound: '咩咩～', color: '#9E9E9E' },
+      { emoji: '🐼', name: '熊猫', sound: '竹竹你好！', color: '#2E7D32' },
+    ];
+
+    const grid = document.getElementById('animalsGrid');
+
+    animals.forEach((a, idx) => {
+      const btn = document.createElement('div');
+      btn.className = 'animal-btn';
+      btn.style.borderColor = a.color + '33';
+      btn.innerHTML = `<span class="emoji">${a.emoji}</span><span class="name">${a.name}</span>`;
+      btn.addEventListener('pointerdown', () => {
+        // 去掉其他 active
+        document.querySelectorAll('.animal-btn.active').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        setTimeout(() => btn.classList.remove('active'), 500);
+
+        // 播放声音
+        ZZ.playAnimalSound(idx);
+        ZZ.vibrate(25);
+
+        // 语音说名字
+        if (idx === 7) {
+          ZZ.speak('熊猫！竹竹你好！');
+        } else {
+          ZZ.speak(a.name);
+        }
+
+        // 弹出声音文字
+        const bubble = document.createElement('div');
+        bubble.className = 'animal-speak-bubble';
+        bubble.textContent = a.sound;
+        bubble.style.color = a.color;
+        document.body.appendChild(bubble);
+        setTimeout(() => bubble.remove(), 900);
+
+        ZZ.maybeCheer(5);
+      });
+      grid.appendChild(btn);
+    });
+  </script>
+</body>
+</html>

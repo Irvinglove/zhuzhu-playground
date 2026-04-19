@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>戳气球 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="game-page" style="background: linear-gradient(180deg, #E8F5E9, #C8E6C9)">
+
+  <div class="game-header">
+    <a class="back-btn" href="index.html">🏠</a>
+    <span class="game-title-float">🎈 戳气球</span>
+  </div>
+
+  <canvas class="game-canvas" id="canvas"></canvas>
+  <div class="zhuzhu-stamp">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    const balloons = [];
+    const confetti = [];
+    let popCount = 0;
+
+    function resize() {
+      const s = ZZ.resizeCanvas(canvas);
+      W = s.w; H = s.h;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Balloon {
+      constructor() {
+        this.r = ZZ.rand(28, 48);
+        this.x = ZZ.rand(this.r, W - this.r);
+        this.y = H + this.r + ZZ.rand(0, 100);
+        this.color = ZZ.randColor();
+        this.vy = ZZ.rand(-1.2, -0.5);
+        this.vx = ZZ.rand(-0.3, 0.3);
+        this.wobble = ZZ.rand(0, Math.PI * 2);
+        this.alive = true;
+        this.hasZhuzhu = Math.random() < 0.15;
+        this.stringLen = ZZ.rand(30, 50);
+      }
+      update() {
+        this.wobble += 0.03;
+        this.x += this.vx + Math.sin(this.wobble) * 0.4;
+        this.y += this.vy;
+        if (this.y + this.r < -50) this.alive = false;
+      }
+      draw(ctx) {
+        ctx.save();
+        // 气球身体
+        ctx.beginPath();
+        ctx.ellipse(this.x, this.y, this.r * 0.85, this.r, 0, 0, Math.PI * 2);
+        const grad = ctx.createRadialGradient(
+          this.x - this.r * 0.2, this.y - this.r * 0.3, this.r * 0.1,
+          this.x, this.y, this.r
+        );
+        grad.addColorStop(0, 'rgba(255,255,255,0.4)');
+        grad.addColorStop(0.4, this.color);
+        grad.addColorStop(1, this.color + 'cc');
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // 高光
+        ctx.beginPath();
+        ctx.ellipse(this.x - this.r * 0.25, this.y - this.r * 0.35, this.r * 0.15, this.r * 0.22, -0.3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fill();
+
+        // 打结处
+        ctx.beginPath();
+        ctx.moveTo(this.x - 4, this.y + this.r - 2);
+        ctx.lineTo(this.x, this.y + this.r + 6);
+        ctx.lineTo(this.x + 4, this.y + this.r - 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+
+        // 绳子
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y + this.r + 6);
+        const sx = this.x + Math.sin(this.wobble) * 8;
+        ctx.quadraticCurveTo(sx, this.y + this.r + this.stringLen * 0.5, this.x, this.y + this.r + this.stringLen);
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 竹竹名字
+        if (this.hasZhuzhu) {
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.font = `bold ${Math.max(11, this.r * 0.4)}px "PingFang SC", sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('竹竹', this.x, this.y);
+        }
+        ctx.restore();
+      }
+      hitTest(px, py) {
+        const dx = px - this.x;
+        const dy = py - this.y;
+        return (dx * dx / (this.r * 0.85 * this.r * 0.85) + dy * dy / (this.r * this.r)) < 1.2;
+      }
+    }
+
+    class Confetti {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.size = ZZ.rand(3, 7);
+        this.rotation = ZZ.rand(0, Math.PI * 2);
+        this.rotSpeed = ZZ.rand(-0.15, 0.15);
+        const angle = ZZ.rand(0, Math.PI * 2);
+        const speed = ZZ.rand(2, 6);
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed - 2;
+        this.life = 1;
+        this.isLeaf = Math.random() < 0.2; // 竹叶形状
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.12;
+        this.vx *= 0.98;
+        this.rotation += this.rotSpeed;
+        this.life -= 0.015;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.life;
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.fillStyle = this.color;
+        if (this.isLeaf) {
+          // 竹叶形状
+          ctx.beginPath();
+          ctx.ellipse(0, 0, this.size * 0.4, this.size, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+        }
+        ctx.restore();
+      }
+    }
+
+    // 生成气球
+    let spawnTimer = 0;
+    function spawnBalloon() {
+      if (balloons.length < 12) {
+        balloons.push(new Balloon());
+      }
+    }
+
+    // 戳破
+    function popBalloon(x, y) {
+      for (let i = balloons.length - 1; i >= 0; i--) {
+        const b = balloons[i];
+        if (b.hitTest(x, y)) {
+          // 生成彩花
+          const count = Math.floor(ZZ.rand(10, 20));
+          for (let j = 0; j < count; j++) {
+            confetti.push(new Confetti(b.x, b.y, j % 3 === 0 ? '#81C784' : ZZ.randColor()));
+          }
+
+          if (b.hasZhuzhu) {
+            ZZ.showEncouragement();
+            ZZ.playCheer();
+            ZZ.speak('竹竹真棒！');
+          } else {
+            ZZ.playPop();
+          }
+
+          ZZ.vibrate(25);
+          balloons.splice(i, 1);
+          popCount++;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      popBalloon(x, y);
+    });
+
+    // 触摸滑动也可以戳
+    canvas.addEventListener('pointermove', (e) => {
+      if (e.pressure > 0 || e.buttons > 0) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        popBalloon(x, y);
+      }
+    });
+
+    function animate() {
+      ctx.clearRect(0, 0, W, H);
+
+      spawnTimer++;
+      if (spawnTimer % 50 === 0) spawnBalloon();
+
+      // 更新绘制气球
+      for (let i = balloons.length - 1; i >= 0; i--) {
+        balloons[i].update();
+        if (!balloons[i].alive) {
+          balloons.splice(i, 1);
+        } else {
+          balloons[i].draw(ctx);
+        }
+      }
+
+      // 更新绘制彩花
+      for (let i = confetti.length - 1; i >= 0; i--) {
+        confetti[i].update();
+        if (confetti[i].life <= 0) {
+          confetti.splice(i, 1);
+        } else {
+          confetti[i].draw(ctx);
+        }
+      }
+
+      // 里程碑
+      if (popCount === 10 || popCount === 25 || popCount === 50) {
+        ZZ.showEncouragement();
+        ZZ.speak('竹竹戳了' + popCount + '个气球！');
+        popCount++; // 防止重复触发
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // 初始放几个气球
+    for (let i = 0; i < 5; i++) {
+      const b = new Balloon();
+      b.y = H * ZZ.rand(0.2, 0.7);
+      balloons.push(b);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

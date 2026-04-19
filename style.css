@@ -1,0 +1,390 @@
+/* ============================================
+   竹竹的游乐场 - 共享样式
+   ============================================ */
+
+:root {
+  --bamboo-green: #4CAF50;
+  --bamboo-light: #81C784;
+  --bamboo-dark: #2E7D32;
+  --bamboo-pale: #E8F5E9;
+  --bamboo-tan: #D4C5A9;
+  --warm-orange: #FF9800;
+  --warm-pink: #FF6B9D;
+  --sky-blue: #42A5F5;
+  --panda-black: #333;
+  --bg-light: #F1F8E9;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg-light);
+}
+
+/* ---- 首页 ---- */
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 50%, #A5D6A7 100%);
+  overflow-y: auto;
+}
+
+.home-title {
+  font-size: 2.2rem;
+  color: var(--bamboo-dark);
+  text-shadow: 2px 2px 0 rgba(255,255,255,0.6);
+  margin: 10px 0 5px;
+  position: relative;
+}
+
+.home-subtitle {
+  font-size: 1rem;
+  color: var(--bamboo-light);
+  margin-bottom: 20px;
+}
+
+/* 熊猫吉祥物 */
+.panda-mascot {
+  width: 100px;
+  height: 100px;
+  position: relative;
+  margin: 10px auto 20px;
+  cursor: pointer;
+  animation: panda-bounce 2s ease-in-out infinite;
+}
+
+@keyframes panda-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.panda-mascot:active {
+  animation: panda-squish 0.3s ease;
+}
+
+@keyframes panda-squish {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2, 0.8); }
+  100% { transform: scale(1); }
+}
+
+.panda-head {
+  width: 80px;
+  height: 72px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 28px;
+  left: 10px;
+  border: 3px solid var(--panda-black);
+  z-index: 2;
+}
+
+.panda-ear {
+  width: 30px;
+  height: 30px;
+  background: var(--panda-black);
+  border-radius: 50%;
+  position: absolute;
+  top: 12px;
+  z-index: 1;
+}
+
+.panda-ear.left { left: 6px; }
+.panda-ear.right { right: 6px; }
+
+.panda-eye {
+  width: 22px;
+  height: 18px;
+  background: var(--panda-black);
+  border-radius: 50%;
+  position: absolute;
+  top: 44px;
+  z-index: 3;
+}
+
+.panda-eye.left { left: 24px; }
+.panda-eye.right { right: 24px; }
+
+.panda-eye-shine {
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  right: 4px;
+}
+
+.panda-nose {
+  width: 14px;
+  height: 10px;
+  background: var(--panda-black);
+  border-radius: 50%;
+  position: absolute;
+  top: 60px;
+  left: 43px;
+  z-index: 3;
+}
+
+.panda-mouth {
+  width: 20px;
+  height: 10px;
+  border-bottom: 2px solid var(--panda-black);
+  border-radius: 0 0 50% 50%;
+  position: absolute;
+  top: 68px;
+  left: 40px;
+  z-index: 3;
+}
+
+.panda-blush {
+  width: 16px;
+  height: 10px;
+  background: rgba(255, 107, 157, 0.4);
+  border-radius: 50%;
+  position: absolute;
+  top: 62px;
+  z-index: 3;
+}
+
+.panda-blush.left { left: 12px; }
+.panda-blush.right { right: 12px; }
+
+/* 竹子装饰 */
+.bamboo-deco {
+  position: fixed;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(180deg, var(--bamboo-green), var(--bamboo-dark));
+  border-radius: 4px;
+  z-index: 0;
+  opacity: 0.3;
+}
+
+.bamboo-deco.left { left: 8px; height: 60vh; }
+.bamboo-deco.right { right: 8px; height: 45vh; }
+
+.bamboo-node {
+  width: 28px;
+  height: 6px;
+  background: var(--bamboo-dark);
+  border-radius: 2px;
+  position: absolute;
+  left: -2px;
+}
+
+.bamboo-leaf {
+  width: 20px;
+  height: 8px;
+  background: var(--bamboo-light);
+  border-radius: 0 50% 50% 0;
+  position: absolute;
+  transform-origin: left center;
+  animation: leaf-sway 3s ease-in-out infinite;
+}
+
+@keyframes leaf-sway {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+}
+
+/* 游戏卡片 */
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  max-width: 400px;
+  width: 100%;
+  padding: 0 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.game-card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px 16px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  border: 2px solid transparent;
+}
+
+.game-card:last-child {
+  grid-column: 1 / -1;
+  max-width: 50%;
+  margin: 0 auto;
+}
+
+.game-card:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.25);
+}
+
+.game-card:nth-child(1) { border-color: var(--sky-blue); }
+.game-card:nth-child(2) { border-color: var(--warm-orange); }
+.game-card:nth-child(3) { border-color: var(--warm-pink); }
+.game-card:nth-child(4) { border-color: #AB47BC; }
+.game-card:nth-child(5) { border-color: #FF7043; }
+
+.game-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.game-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--bamboo-dark);
+}
+
+.game-desc {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+/* ---- 游戏页通用 ---- */
+.game-page {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.game-header > * {
+  pointer-events: auto;
+}
+
+.back-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.85);
+  border: 2px solid var(--bamboo-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.15s;
+}
+
+.back-btn:active {
+  transform: scale(0.9);
+}
+
+.game-title-float {
+  font-size: 0.85rem;
+  color: rgba(46, 125, 50, 0.5);
+  font-weight: 600;
+}
+
+/* 鼓励语 */
+.encouragement {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--warm-pink);
+  text-shadow: 2px 2px 0 rgba(255,255,255,0.8);
+  animation: float-up 1.5s ease-out forwards;
+}
+
+@keyframes float-up {
+  0% { opacity: 1; transform: translateY(0) scale(0.5); }
+  30% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
+}
+
+/* 通用游戏区域 canvas */
+.game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 动物叫声 / 钢琴 DOM 游戏 */
+.game-dom-area {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-top: 56px;
+}
+
+/* 熊猫水印章 */
+.zhuzhu-stamp {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  font-size: 0.7rem;
+  color: rgba(76, 175, 80, 0.25);
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* ---- 响应式 ---- */
+@media (min-width: 600px) {
+  .home-title { font-size: 2.8rem; }
+  .game-grid { max-width: 500px; gap: 20px; }
+  .game-card { padding: 30px 20px; }
+  .game-icon { font-size: 3.5rem; }
+}
+
+@media (max-height: 600px) {
+  .panda-mascot { width: 70px; height: 70px; margin: 5px auto 10px; }
+  .panda-head { width: 56px; height: 50px; top: 20px; left: 7px; }
+  .panda-ear { width: 22px; height: 22px; top: 8px; }
+  .panda-ear.left { left: 4px; }
+  .panda-ear.right { right: 4px; }
+  .panda-eye { width: 16px; height: 13px; top: 32px; }
+  .panda-eye.left { left: 17px; }
+  .panda-eye.right { right: 17px; }
+  .panda-nose { top: 44px; left: 30px; width: 10px; height: 7px; }
+  .panda-mouth { top: 49px; left: 28px; }
+  .panda-blush { top: 44px; width: 12px; height: 7px; }
+  .panda-blush.left { left: 8px; }
+  .panda-blush.right { right: 8px; }
+  .home-title { font-size: 1.8rem; margin: 5px 0; }
+  .home-subtitle { margin-bottom: 10px; }
+  .game-grid { gap: 10px; }
+  .game-card { padding: 16px 10px; }
+}

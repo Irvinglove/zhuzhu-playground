@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>泡泡乐 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="game-page" style="background:#E3F2FD">
+
+  <div class="game-header">
+    <a class="back-btn" href="index.html">🏠</a>
+    <span class="game-title-float">🫧 泡泡乐</span>
+  </div>
+
+  <canvas class="game-canvas" id="canvas"></canvas>
+  <div class="zhuzhu-stamp">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    const bubbles = [];
+    const popParticles = [];
+
+    function resize() {
+      const s = ZZ.resizeCanvas(canvas);
+      W = s.w; H = s.h;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Bubble {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.r = ZZ.rand(25, 60);
+        this.color = ZZ.randColor();
+        this.vx = ZZ.rand(-0.5, 0.5);
+        this.vy = ZZ.rand(-1.5, -0.5);
+        this.wobble = ZZ.rand(0, Math.PI * 2);
+        this.wobbleSpeed = ZZ.rand(0.02, 0.05);
+        this.alive = true;
+        this.opacity = 0.85;
+        this.hasZhuzhu = Math.random() < 0.12;
+      }
+      update() {
+        this.wobble += this.wobbleSpeed;
+        this.x += this.vx + Math.sin(this.wobble) * 0.5;
+        this.y += this.vy;
+        this.opacity -= 0.002;
+        if (this.y + this.r < 0 || this.opacity <= 0) this.alive = false;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.opacity;
+        // bubble body
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        const grad = ctx.createRadialGradient(
+          this.x - this.r * 0.3, this.y - this.r * 0.3, this.r * 0.1,
+          this.x, this.y, this.r
+        );
+        grad.addColorStop(0, 'rgba(255,255,255,0.6)');
+        grad.addColorStop(0.5, this.color + '88');
+        grad.addColorStop(1, this.color + '22');
+        ctx.fillStyle = grad;
+        ctx.fill();
+        // shine
+        ctx.beginPath();
+        ctx.arc(this.x - this.r * 0.25, this.y - this.r * 0.25, this.r * 0.18, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fill();
+        // 竹竹名字
+        if (this.hasZhuzhu) {
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.font = `${Math.max(12, this.r * 0.5)}px "PingFang SC", sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('竹竹', this.x, this.y);
+        }
+        ctx.restore();
+      }
+    }
+
+    class PopParticle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.r = ZZ.rand(2, 5);
+        const angle = ZZ.rand(0, Math.PI * 2);
+        const speed = ZZ.rand(1, 4);
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.life = 1;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.05;
+        this.life -= 0.03;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.life;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // 生成泡泡
+    function spawnBubbles(x, y) {
+      const count = Math.floor(ZZ.rand(3, 7));
+      for (let i = 0; i < count; i++) {
+        const bx = x + ZZ.rand(-40, 40);
+        const by = y + ZZ.rand(-30, 30);
+        bubbles.push(new Bubble(bx, by));
+      }
+      ZZ.playBubble();
+      ZZ.vibrate(15);
+      ZZ.maybeCheer();
+    }
+
+    // 戳破泡泡
+    function tryPopBubble(x, y) {
+      for (let i = bubbles.length - 1; i >= 0; i--) {
+        const b = bubbles[i];
+        const dx = x - b.x;
+        const dy = y - b.y;
+        if (dx * dx + dy * dy < b.r * b.r) {
+          // pop!
+          for (let j = 0; j < 8; j++) {
+            popParticles.push(new PopParticle(b.x, b.y, b.color));
+          }
+          if (b.hasZhuzhu) {
+            ZZ.showEncouragement();
+            ZZ.playCheer();
+          } else {
+            ZZ.playPop();
+          }
+          ZZ.vibrate(20);
+          bubbles.splice(i, 1);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      if (!tryPopBubble(x, y)) {
+        spawnBubbles(x, y);
+      }
+    });
+
+    // 自动生成小泡泡营造氛围
+    setInterval(() => {
+      if (bubbles.length < 5) {
+        bubbles.push(new Bubble(ZZ.rand(0, W), H + 30));
+      }
+    }, 2000);
+
+    function animate() {
+      ctx.clearRect(0, 0, W, H);
+
+      // 更新和绘制泡泡
+      for (let i = bubbles.length - 1; i >= 0; i--) {
+        bubbles[i].update();
+        if (!bubbles[i].alive) {
+          bubbles.splice(i, 1);
+        } else {
+          bubbles[i].draw(ctx);
+        }
+      }
+
+      // 更新和绘制爆裂粒子
+      for (let i = popParticles.length - 1; i >= 0; i--) {
+        popParticles[i].update();
+        if (popParticles[i].life <= 0) {
+          popParticles.splice(i, 1);
+        } else {
+          popParticles[i].draw(ctx);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
