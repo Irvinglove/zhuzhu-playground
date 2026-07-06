@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>喂小动物 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .feed-animal-card { min-height: 210px; }
+    .feed-animal-card .english-card-emoji { font-size: 4.2rem; }
+  </style>
+</head>
+<body class="game-page" style="background: linear-gradient(180deg, #F4FBF1, #E6F7D8)">
+  <div class="game-header">
+    <a class="back-btn" href="index.html">🏠</a>
+    <div class="game-star-bar"><span class="star-icon">⭐</span><span class="star-count">0</span></div>
+    <span class="game-title-float">🍌 Feed the Animal</span>
+  </div>
+
+  <div class="game-dom-area">
+    <div class="english-shell">
+      <div class="english-prompt">
+        <div class="english-prompt-kicker" id="kicker">Feed the Animal</div>
+        <div class="english-prompt-text" id="promptText">Feed the monkey</div>
+        <div class="english-prompt-hint" id="promptHint">Tap the right food.</div>
+        <button class="english-replay-btn" id="replayBtn" type="button">🔊 Say food</button>
+      </div>
+      <button class="english-card feed-animal-card" id="animalCard" type="button"></button>
+      <div class="english-play-grid" id="foodGrid"></div>
+      <div class="english-footer-tip">Choose one food and make the animal happy.</div>
+    </div>
+  </div>
+
+  <div class="zhuzhu-stamp">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script src="english-common.js"></script>
+  <script>
+    ZZ.updateStarDisplay();
+
+    const rounds = EnglishGames.packs.feedRounds;
+    const foods = EnglishGames.packs.foods;
+    const kicker = document.getElementById('kicker');
+    const promptText = document.getElementById('promptText');
+    const promptHint = document.getElementById('promptHint');
+    const replayBtn = document.getElementById('replayBtn');
+    const animalCard = document.getElementById('animalCard');
+    const foodGrid = document.getElementById('foodGrid');
+    let index = 0;
+    let currentRound = rounds[0];
+
+    function renderAnimal() {
+      animalCard.style.background = currentRound.color;
+      animalCard.innerHTML = `<div class="english-card-emoji">${currentRound.animalEmoji}</div><div class="english-card-word">${currentRound.animal}</div><div class="english-card-sub">wants ${currentRound.food}</div>`;
+    }
+
+    function nextRound() {
+      currentRound = rounds[index % rounds.length];
+      index++;
+      EnglishGames.setPrompt(kicker, promptText, promptHint, 'Feed the Animal', `Feed the ${currentRound.animal}`, `Tap ${currentRound.food}.`);
+      renderAnimal();
+      foodGrid.innerHTML = '';
+      EnglishGames.shuffle(foods).forEach(food => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'english-card';
+        card.style.background = food.color;
+        card.innerHTML = `<div class="english-card-emoji">${food.emoji}</div><div class="english-card-word">${food.word}</div><div class="english-card-sub">tap to feed</div>`;
+        card.addEventListener('pointerdown', () => {
+          if (food.word === currentRound.food) {
+            EnglishGames.pulse(card, 'correct');
+            EnglishGames.pulse(animalCard, 'correct');
+            ZZ.playCheer();
+            EnglishGames.rewardCard(card, 1);
+            EnglishGames.speakEnglish(food.word);
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Feed the Animal', `${currentRound.animal} likes ${food.word}!`, 'Yummy!');
+            setTimeout(nextRound, 650);
+          } else {
+            EnglishGames.pulse(card, 'miss', 260);
+            ZZ.playBubble();
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Feed the Animal', `Feed the ${currentRound.animal}`, `Tap ${currentRound.food}.`);
+            EnglishGames.speakEnglish(currentRound.food);
+          }
+        });
+        foodGrid.appendChild(card);
+      });
+    }
+
+    replayBtn.addEventListener('pointerdown', () => EnglishGames.speakEnglish(currentRound.food));
+    animalCard.addEventListener('pointerdown', () => EnglishGames.speakEnglish(currentRound.animal));
+
+    nextRound();
+  </script>
+</body>
+</html>

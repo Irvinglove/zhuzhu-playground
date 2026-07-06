@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>日常英语 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .routine-scene { min-height: 200px; }
+    .routine-scene .english-card-emoji { font-size: 4.2rem; }
+  </style>
+</head>
+<body class="game-page" style="background: linear-gradient(180deg, #EFF8FF, #E3F2FD)">
+  <div class="game-header">
+    <a class="back-btn" href="index.html">🏠</a>
+    <div class="game-star-bar"><span class="star-icon">⭐</span><span class="star-count">0</span></div>
+    <span class="game-title-float">🪥 Daily Routine</span>
+  </div>
+
+  <div class="game-dom-area">
+    <div class="english-shell">
+      <div class="english-prompt">
+        <div class="english-prompt-kicker" id="kicker">Daily Routine</div>
+        <div class="english-prompt-text" id="promptText">Open curtain</div>
+        <div class="english-prompt-hint" id="promptHint">Tap the right thing.</div>
+        <button class="english-replay-btn" id="replayBtn" type="button">🔊 Say routine</button>
+      </div>
+      <div class="english-card english-scene-card routine-scene" id="sceneCard"></div>
+      <div class="english-play-grid" id="choiceGrid"></div>
+      <div class="english-footer-tip">One little daily task, one little English step.</div>
+    </div>
+  </div>
+
+  <div class="zhuzhu-stamp">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script src="english-common.js"></script>
+  <script>
+    ZZ.updateStarDisplay();
+
+    const rounds = EnglishGames.packs.routineRounds;
+    const kicker = document.getElementById('kicker');
+    const promptText = document.getElementById('promptText');
+    const promptHint = document.getElementById('promptHint');
+    const replayBtn = document.getElementById('replayBtn');
+    const sceneCard = document.getElementById('sceneCard');
+    const choiceGrid = document.getElementById('choiceGrid');
+    let index = 0;
+    let current = rounds[0];
+
+    function renderScene() {
+      sceneCard.style.background = current.color;
+      sceneCard.innerHTML = `<div class="english-card-emoji">${current.scene}</div><div class="english-card-word">${current.title}</div><div class="english-card-sub">${current.prompt}</div>`;
+    }
+
+    function nextRound() {
+      current = rounds[index % rounds.length];
+      index++;
+      EnglishGames.setPrompt(kicker, promptText, promptHint, 'Daily Routine', current.prompt, 'Tap the right thing.');
+      renderScene();
+      choiceGrid.innerHTML = '';
+      EnglishGames.shuffle(current.choices).forEach(choice => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'english-card';
+        card.style.background = '#FFFFFF';
+        card.innerHTML = `<div class="english-card-emoji">${choice.emoji}</div><div class="english-card-word">${choice.word}</div><div class="english-card-sub">choose me</div>`;
+        card.addEventListener('pointerdown', () => {
+          if (choice.correct) {
+            EnglishGames.pulse(card, 'correct');
+            EnglishGames.pulse(sceneCard, 'correct');
+            ZZ.playCheer();
+            EnglishGames.rewardCard(card, 1);
+            EnglishGames.speakEnglish(current.prompt);
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Daily Routine', current.prompt, 'Great! Next task...');
+            setTimeout(nextRound, 700);
+          } else {
+            EnglishGames.pulse(card, 'miss', 260);
+            ZZ.playBubble();
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Daily Routine', current.prompt, 'Try again.');
+          }
+        });
+        choiceGrid.appendChild(card);
+      });
+    }
+
+    replayBtn.addEventListener('pointerdown', () => EnglishGames.speakEnglish(current.prompt));
+    nextRound();
+  </script>
+</body>
+</html>

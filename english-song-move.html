@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>儿歌动作 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .song-scene { min-height: 180px; }
+    .song-scene .english-card-emoji { font-size: 4rem; }
+  </style>
+</head>
+<body class="game-page" style="background: linear-gradient(180deg, #F8F0FF, #EDE7F6)">
+  <div class="game-header">
+    <a class="back-btn" href="index.html">🏠</a>
+    <div class="game-star-bar"><span class="star-icon">⭐</span><span class="star-count">0</span></div>
+    <span class="game-title-float">🎵 Song & Move</span>
+  </div>
+
+  <div class="game-dom-area">
+    <div class="english-shell">
+      <div class="english-prompt">
+        <div class="english-prompt-kicker" id="kicker">Song & Move</div>
+        <div class="english-prompt-text" id="promptText">Hello hello</div>
+        <div class="english-prompt-hint" id="promptHint">Tap the matching move.</div>
+        <button class="english-replay-btn" id="replayBtn" type="button">🔊 Sing line</button>
+      </div>
+      <div class="english-card english-scene-card song-scene" id="songCard"></div>
+      <div class="english-play-grid" id="choiceGrid"></div>
+      <div class="english-footer-tip">Short song, easy move, happy smile.</div>
+    </div>
+  </div>
+
+  <div class="zhuzhu-stamp">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script src="english-common.js"></script>
+  <script>
+    ZZ.updateStarDisplay();
+
+    const songs = EnglishGames.packs.songs;
+    const moveIcons = { wave: '👋', clap: '👏', stamp: '🦶', jump: '🦘', 'touch nose': '👃', sleep: '😴', sit: '🪑' };
+    const kicker = document.getElementById('kicker');
+    const promptText = document.getElementById('promptText');
+    const promptHint = document.getElementById('promptHint');
+    const replayBtn = document.getElementById('replayBtn');
+    const songCard = document.getElementById('songCard');
+    const choiceGrid = document.getElementById('choiceGrid');
+    let songIndex = 0;
+    let lineIndex = 0;
+    let currentSong = songs[0];
+    let currentLine = currentSong.lines[0];
+
+    function renderSongCard() {
+      songCard.style.background = '#FFFFFF';
+      songCard.innerHTML = `<div class="english-card-emoji">${currentSong.emoji}</div><div class="english-card-word">${currentSong.name}</div><div class="english-card-sub">${currentSong.intro}</div>`;
+    }
+
+    function nextLine() {
+      currentSong = songs[songIndex % songs.length];
+      if (lineIndex >= currentSong.lines.length) {
+        songIndex++;
+        lineIndex = 0;
+        currentSong = songs[songIndex % songs.length];
+      }
+      currentLine = currentSong.lines[lineIndex];
+      lineIndex++;
+      renderSongCard();
+      EnglishGames.setPrompt(kicker, promptText, promptHint, 'Song & Move', currentLine.lyric, 'Tap the matching move.');
+      choiceGrid.innerHTML = '';
+      EnglishGames.shuffle(currentLine.choices).forEach(choice => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'english-card';
+        card.style.background = '#FFFDE7';
+        card.innerHTML = `<div class="english-card-emoji">${moveIcons[choice] || '✨'}</div><div class="english-card-word">${choice}</div><div class="english-card-sub">move move</div>`;
+        card.addEventListener('pointerdown', () => {
+          if (choice === currentLine.action) {
+            EnglishGames.pulse(card, 'correct');
+            ZZ.playCheer();
+            EnglishGames.rewardCard(card, 1);
+            EnglishGames.speakEnglish(currentLine.lyric);
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Song & Move', currentLine.lyric, 'Sing and move!');
+            setTimeout(nextLine, 760);
+          } else {
+            EnglishGames.pulse(card, 'miss', 260);
+            ZZ.playBubble();
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Song & Move', currentLine.lyric, 'Try the same move.');
+          }
+        });
+        choiceGrid.appendChild(card);
+      });
+    }
+
+    replayBtn.addEventListener('pointerdown', () => EnglishGames.speakEnglish(currentLine.lyric));
+    nextLine();
+  </script>
+</body>
+</html>

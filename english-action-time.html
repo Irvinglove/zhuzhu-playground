@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>动作英语 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="game-page" style="background: linear-gradient(180deg, #FFF7E8, #FDEBD0)">
+  <div class="game-header">
+    <a class="back-btn" href="index.html">🏠</a>
+    <div class="game-star-bar"><span class="star-icon">⭐</span><span class="star-count">0</span></div>
+    <span class="game-title-float">👏 Action Time</span>
+  </div>
+
+  <div class="game-dom-area">
+    <div class="english-shell">
+      <div class="english-prompt">
+        <div class="english-prompt-kicker" id="kicker">Action Time</div>
+        <div class="english-prompt-text" id="promptText">Clap!</div>
+        <div class="english-prompt-hint" id="promptHint">Do the action, then tap the card.</div>
+        <button class="english-replay-btn" id="replayBtn" type="button">🔊 Say action</button>
+      </div>
+      <div class="english-play-grid" id="playGrid"></div>
+      <div class="english-footer-tip">Move with mama, then tap the same action.</div>
+    </div>
+  </div>
+
+  <div class="zhuzhu-stamp">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script src="english-common.js"></script>
+  <script>
+    ZZ.updateStarDisplay();
+
+    const actions = EnglishGames.packs.actions;
+    const kicker = document.getElementById('kicker');
+    const promptText = document.getElementById('promptText');
+    const promptHint = document.getElementById('promptHint');
+    const replayBtn = document.getElementById('replayBtn');
+    const playGrid = document.getElementById('playGrid');
+    let index = 0;
+    let target = actions[0];
+
+    function nextRound() {
+      target = actions[index % actions.length];
+      index++;
+      EnglishGames.setPrompt(kicker, promptText, promptHint, 'Action Time', `${target.word}!`, target.hint);
+      playGrid.innerHTML = '';
+      actions.forEach(action => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'english-card';
+        card.style.background = action.color;
+        card.innerHTML = `<div class="english-card-emoji">${action.emoji}</div><div class="english-card-word">${action.word}</div><div class="english-card-sub">${action.word === target.word ? 'do it, then tap' : 'tap the same action'}</div>`;
+        card.addEventListener('pointerdown', () => {
+          if (action.word === target.word) {
+            EnglishGames.pulse(card, 'correct');
+            ZZ.playCheer();
+            EnglishGames.rewardCard(card, 1);
+            EnglishGames.speakEnglish(action.word);
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Action Time', `${action.word}!`, 'Yay! Next one...');
+            setTimeout(nextRound, 520);
+          } else {
+            EnglishGames.pulse(card, 'miss', 260);
+            ZZ.playBubble();
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Action Time', `${target.word}!`, 'Find the same action.');
+            EnglishGames.speakEnglish(target.word);
+          }
+        });
+        playGrid.appendChild(card);
+      });
+    }
+
+    replayBtn.addEventListener('pointerdown', () => {
+      ZZ.playBubble();
+      EnglishGames.speakEnglish(target.word);
+    });
+
+    nextRound();
+  </script>
+</body>
+</html>

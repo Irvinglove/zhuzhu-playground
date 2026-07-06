@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>动物英语 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="game-page" style="background: linear-gradient(180deg, #FFF8E1, #FFF3E0)">
+  <div class="game-header">
+    <a class="back-btn" href="index.html">🏠</a>
+    <div class="game-star-bar"><span class="star-icon">⭐</span><span class="star-count">0</span></div>
+    <span class="game-title-float">🐶 Animal Sounds</span>
+  </div>
+
+  <div class="game-dom-area">
+    <div class="english-shell">
+      <div class="english-prompt">
+        <div class="english-prompt-kicker" id="kicker">Animal Sounds</div>
+        <div class="english-prompt-text" id="promptText">Where is the dog?</div>
+        <div class="english-prompt-hint" id="promptHint">Tap the right animal.</div>
+        <button class="english-replay-btn" id="replayBtn" type="button">🔊 Hear again</button>
+      </div>
+      <div class="english-play-grid" id="playGrid"></div>
+      <div class="english-footer-tip">Listen, look, and find the animal friend.</div>
+    </div>
+  </div>
+
+  <div class="zhuzhu-stamp">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script src="english-common.js"></script>
+  <script>
+    ZZ.updateStarDisplay();
+
+    const animals = EnglishGames.packs.animals;
+    const kicker = document.getElementById('kicker');
+    const promptText = document.getElementById('promptText');
+    const promptHint = document.getElementById('promptHint');
+    const replayBtn = document.getElementById('replayBtn');
+    const playGrid = document.getElementById('playGrid');
+    let roundIndex = 0;
+    let currentTarget = animals[0];
+
+    function nextRound() {
+      currentTarget = animals[roundIndex % animals.length];
+      roundIndex++;
+      EnglishGames.setPrompt(kicker, promptText, promptHint, 'Animal Sounds', `Where is the ${currentTarget.word}?`, 'Tap the right animal.');
+      playGrid.innerHTML = '';
+
+      EnglishGames.shuffle(animals).forEach(animal => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'english-card';
+        card.style.background = animal.color;
+        card.innerHTML = `<div class="english-card-emoji">${animal.emoji}</div><div class="english-card-word">${animal.word}</div><div class="english-card-sub">${animal.hint}</div>`;
+        card.addEventListener('pointerdown', () => {
+          if (animal.word === currentTarget.word) {
+            EnglishGames.pulse(card, 'correct');
+            ZZ.playAnimalSound(animal.soundIndex);
+            setTimeout(() => EnglishGames.speakEnglish(animal.word), 180);
+            EnglishGames.rewardCard(card, 1);
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Animal Sounds', `${animal.word}!`, 'You found it!');
+            setTimeout(nextRound, 700);
+          } else {
+            EnglishGames.pulse(card, 'miss', 260);
+            ZZ.playBubble();
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Animal Sounds', `Where is the ${currentTarget.word}?`, 'Try again.');
+            EnglishGames.speakEnglish(currentTarget.word);
+          }
+        });
+        playGrid.appendChild(card);
+      });
+    }
+
+    replayBtn.addEventListener('pointerdown', () => {
+      ZZ.playAnimalSound(currentTarget.soundIndex);
+      setTimeout(() => EnglishGames.speakEnglish(currentTarget.word), 160);
+    });
+
+    nextRound();
+  </script>
+</body>
+</html>

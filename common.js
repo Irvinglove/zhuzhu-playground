@@ -176,14 +176,14 @@ const ZZ = (() => {
   }
 
   // ---- 语音 ----
-  function speak(text) {
+  function speak(text, options = {}) {
     if ('speechSynthesis' in window) {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'zh-CN';
-      u.rate = 0.65;
-      u.pitch = 1.4;
-      u.volume = 1;
+      u.lang = options.lang || 'zh-CN';
+      u.rate = options.rate || 0.65;
+      u.pitch = options.pitch || 1.4;
+      u.volume = options.volume || 1;
       speechSynthesis.speak(u);
     }
   }

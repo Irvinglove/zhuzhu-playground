@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>找惊喜 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .peek-door { min-height: 190px; }
+    .peek-door.opened { background: linear-gradient(180deg, #FFFDE7, #FFF8E1); }
+    .peek-door .english-card-emoji { font-size: 4rem; }
+  </style>
+</head>
+<body class="game-page" style="background: linear-gradient(180deg, #FDF6EC, #F8E5C8)">
+  <div class="game-header">
+    <a class="back-btn" href="index.html">🏠</a>
+    <div class="game-star-bar"><span class="star-icon">⭐</span><span class="star-count">0</span></div>
+    <span class="game-title-float">🚪 Peekaboo</span>
+  </div>
+
+  <div class="game-dom-area">
+    <div class="english-shell">
+      <div class="english-prompt">
+        <div class="english-prompt-kicker" id="kicker">Peekaboo</div>
+        <div class="english-prompt-text" id="promptText">Where is the apple?</div>
+        <div class="english-prompt-hint" id="promptHint">Open a door and find it.</div>
+        <button class="english-replay-btn" id="replayBtn" type="button">🔊 Say word</button>
+      </div>
+      <div class="english-play-grid" id="playGrid"></div>
+      <div class="english-footer-tip">Open a door and say the surprise word.</div>
+    </div>
+  </div>
+
+  <div class="zhuzhu-stamp">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script src="english-common.js"></script>
+  <script>
+    ZZ.updateStarDisplay();
+
+    const source = EnglishGames.packs.peekaboo;
+    const kicker = document.getElementById('kicker');
+    const promptText = document.getElementById('promptText');
+    const promptHint = document.getElementById('promptHint');
+    const replayBtn = document.getElementById('replayBtn');
+    const playGrid = document.getElementById('playGrid');
+    let target = source[0];
+    let roundSet = [];
+
+    function nextRound() {
+      roundSet = EnglishGames.shuffle(source).slice(0, 3);
+      target = roundSet[Math.floor(Math.random() * roundSet.length)];
+      EnglishGames.setPrompt(kicker, promptText, promptHint, 'Peekaboo', `Where is the ${target.word}?`, 'Open a door and find it.');
+      playGrid.innerHTML = '';
+
+      roundSet.forEach(item => {
+        const door = document.createElement('button');
+        door.type = 'button';
+        door.className = 'english-card peek-door';
+        door.style.background = '#FFF3E0';
+        door.innerHTML = `<div class="english-card-emoji">🚪</div><div class="english-card-word">open</div><div class="english-card-sub">peek inside</div>`;
+        door.addEventListener('pointerdown', () => {
+          door.classList.add('opened');
+          door.innerHTML = `<div class="english-card-emoji">${item.emoji}</div><div class="english-card-word">${item.word}</div><div class="english-card-sub">peekaboo!</div>`;
+          if (item.word === target.word) {
+            ZZ.playCheer();
+            EnglishGames.rewardCard(door, 1);
+            EnglishGames.speakEnglish(item.word);
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Peekaboo', `${item.word}!`, 'You found it!');
+            setTimeout(nextRound, 800);
+          } else {
+            ZZ.playBubble();
+            EnglishGames.setPrompt(kicker, promptText, promptHint, 'Peekaboo', `Where is the ${target.word}?`, 'Keep looking.');
+          }
+        }, { once: true });
+        playGrid.appendChild(door);
+      });
+    }
+
+    replayBtn.addEventListener('pointerdown', () => EnglishGames.speakEnglish(target.word));
+
+    nextRound();
+  </script>
+</body>
+</html>

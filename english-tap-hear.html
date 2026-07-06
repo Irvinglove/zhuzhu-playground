@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>点词卡 - 竹竹的游乐场</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="game-page" style="background: linear-gradient(180deg, #F4FBF1, #E1F5E7)">
+  <div class="game-header">
+    <a class="back-btn" href="index.html">🏠</a>
+    <div class="game-star-bar"><span class="star-icon">⭐</span><span class="star-count">0</span></div>
+    <span class="game-title-float">🧸 Tap & Hear</span>
+  </div>
+
+  <div class="game-dom-area">
+    <div class="english-shell">
+      <div class="english-prompt">
+        <div class="english-prompt-kicker" id="kicker">Tap & Hear</div>
+        <div class="english-prompt-text" id="promptText">Tap a word</div>
+        <div class="english-prompt-hint" id="promptHint">Listen and say it again.</div>
+        <button class="english-replay-btn" id="replayBtn" type="button">🔊 Say it</button>
+      </div>
+      <div class="english-play-grid" id="playGrid"></div>
+      <div class="english-footer-tip">Big picture, little word, happy tap.</div>
+    </div>
+  </div>
+
+  <div class="zhuzhu-stamp">🎍 竹竹</div>
+
+  <script src="common.js"></script>
+  <script src="english-common.js"></script>
+  <script>
+    ZZ.updateStarDisplay();
+
+    const kicker = document.getElementById('kicker');
+    const promptText = document.getElementById('promptText');
+    const promptHint = document.getElementById('promptHint');
+    const replayBtn = document.getElementById('replayBtn');
+    const playGrid = document.getElementById('playGrid');
+    const items = EnglishGames.packs.words.slice(0, 4);
+    let lastWord = 'tap a word';
+
+    function render() {
+      playGrid.innerHTML = '';
+      EnglishGames.setPrompt(kicker, promptText, promptHint, 'Tap & Hear', 'Tap a word', 'Listen and say it again.');
+      items.forEach(item => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'english-card';
+        card.style.background = item.color;
+        card.innerHTML = `<div class="english-card-emoji">${item.emoji}</div><div class="english-card-word">${item.word}</div><div class="english-card-sub">${item.hint}</div>`;
+        card.addEventListener('pointerdown', () => {
+          lastWord = item.word;
+          EnglishGames.pulse(card, 'correct');
+          ZZ.playBubble();
+          EnglishGames.rewardCard(card, 1);
+          EnglishGames.speakEnglish(item.word);
+          EnglishGames.setPrompt(kicker, promptText, promptHint, 'Tap & Hear', item.word, 'Good job!');
+        });
+        playGrid.appendChild(card);
+      });
+    }
+
+    replayBtn.addEventListener('pointerdown', () => {
+      ZZ.playBubble();
+      EnglishGames.speakEnglish(lastWord);
+    });
+
+    render();
+  </script>
+</body>
+</html>
