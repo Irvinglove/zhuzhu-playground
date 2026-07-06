@@ -4,6 +4,18 @@
 
 const ZZ = (() => {
   let audioCtx = null;
+  let currentAnimalAudio = null;
+  const animalAudioCache = {};
+  const animalAudioFiles = [
+    'assets/audio/animals/dog.ogg',
+    'assets/audio/animals/cat.ogg',
+    'assets/audio/animals/cow.ogg',
+    'assets/audio/animals/pig.ogg',
+    'assets/audio/animals/frog.oga',
+    'assets/audio/animals/chicken.ogg',
+    'assets/audio/animals/sheep.ogg',
+    'assets/audio/animals/panda.ogg',
+  ];
 
   function getAudioCtx() {
     if (!audioCtx) {
@@ -117,75 +129,39 @@ const ZZ = (() => {
     osc2.stop(ctx.currentTime + 0.6);
   }
 
-  // ---- 真实动物叫声（合成改进版） ----
+  // ---- 真实动物叫声 ----
+  function stopAnimalSound() {
+    if (!currentAnimalAudio) return;
+    currentAnimalAudio.pause();
+    currentAnimalAudio.currentTime = 0;
+    currentAnimalAudio = null;
+  }
+
   function playAnimalSound(idx) {
-    const ctx = getAudioCtx();
-    const sounds = [
-      // 0: 狗 - 汪汪
-      () => {
-        for (let i = 0; i < 3; i++) {
-          setTimeout(() => {
-            playSlide(500, 300, 0.08, 'sawtooth', 0.15);
-            playNoise(0.06, 0.08);
-            setTimeout(() => playSlide(400, 250, 0.06, 'sawtooth', 0.1), 60);
-          }, i * 180);
-        }
-      },
-      // 1: 猫 - 喵～
-      () => {
-        playSlide(700, 500, 0.3, 'sine', 0.12);
-        setTimeout(() => playSlide(500, 650, 0.25, 'sine', 0.08), 200);
-        setTimeout(() => playSlide(600, 400, 0.2, 'sine', 0.05), 400);
-      },
-      // 2: 牛 - 哞～
-      () => {
-        playSlide(120, 100, 0.6, 'sawtooth', 0.12);
-        setTimeout(() => playSlide(110, 90, 0.4, 'sawtooth', 0.08), 400);
-      },
-      // 3: 猪 - 哼哼
-      () => {
-        for (let i = 0; i < 2; i++) {
-          setTimeout(() => {
-            playSlide(280, 200, 0.12, 'square', 0.1);
-            playNoise(0.08, 0.06);
-          }, i * 200);
-        }
-      },
-      // 4: 青蛙 - 呱呱
-      () => {
-        for (let i = 0; i < 3; i++) {
-          setTimeout(() => {
-            playSlide(600, 200, 0.06, 'square', 0.12);
-            setTimeout(() => playSlide(300, 150, 0.04, 'sine', 0.08), 40);
-          }, i * 120);
-        }
-      },
-      // 5: 鸡 - 叽叽
-      () => {
-        for (let i = 0; i < 4; i++) {
-          setTimeout(() => {
-            playSlide(1200, 900, 0.05, 'sine', 0.1);
-            setTimeout(() => playSlide(1000, 800, 0.03, 'sine', 0.06), 30);
-          }, i * 80);
-        }
-      },
-      // 6: 羊 - 咩～
-      () => {
-        playSlide(350, 280, 0.3, 'triangle', 0.1);
-        setTimeout(() => playSlide(300, 350, 0.2, 'triangle', 0.08), 250);
-        setTimeout(() => playSlide(320, 250, 0.25, 'triangle', 0.06), 450);
-      },
-      // 7: 熊猫 - 竹竹专属
-      () => {
-        playSlide(300, 500, 0.2, 'sine', 0.1);
-        setTimeout(() => playSlide(500, 600, 0.15, 'sine', 0.08), 150);
-        setTimeout(() => {
-          playSlide(600, 400, 0.3, 'sine', 0.06);
-          playNoise(0.05, 0.03);
-        }, 300);
-      },
-    ];
-    if (sounds[idx]) sounds[idx]();
+    const src = animalAudioFiles[idx];
+    if (!src) return;
+
+    getAudioCtx();
+    stopAnimalSound();
+
+    if (!animalAudioCache[src]) {
+      const audio = new Audio(src);
+      audio.preload = 'auto';
+      audio.playsInline = true;
+      animalAudioCache[src] = audio;
+    }
+
+    const audio = animalAudioCache[src];
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    currentAnimalAudio = audio;
+
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(err => {
+        console.warn('动物声音播放失败:', err);
+        if (currentAnimalAudio === audio) currentAnimalAudio = null;
+      });
+    }
   }
 
   function playCheer() {
@@ -202,6 +178,7 @@ const ZZ = (() => {
   // ---- 语音 ----
   function speak(text) {
     if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = 'zh-CN';
       u.rate = 0.65;
@@ -303,7 +280,7 @@ const ZZ = (() => {
   return {
     getAudioCtx, playTone, playSlide, playNoise,
     playBubble, playPop, playFirework, playPianoNote,
-    playAnimalSound, playCheer, playStar, speak,
+    playAnimalSound, stopAnimalSound, playCheer, playStar, speak,
     showEncouragement, maybeCheer, randColor, rand,
     resizeCanvas, vibrate, cheers,
     resetCheerCounter: () => { cheerCounter = 0; },

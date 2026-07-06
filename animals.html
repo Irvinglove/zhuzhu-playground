@@ -101,14 +101,14 @@
     ZZ.updateStarDisplay();
 
     const animals = [
-      { emoji: '🐶', name: '小狗', sound: '汪汪！', voice: '汪汪汪！小狗叫！', color: '#FF9800' },
-      { emoji: '🐱', name: '小猫', sound: '喵喵～', voice: '喵喵喵！小猫叫！', color: '#42A5F5' },
-      { emoji: '🐮', name: '奶牛', sound: '哞～', voice: '哞！奶牛叫！', color: '#8D6E63' },
-      { emoji: '🐷', name: '小猪', sound: '哼哼！', voice: '哼哼哼！小猪叫！', color: '#E91E63' },
-      { emoji: '🐸', name: '青蛙', sound: '呱呱！', voice: '呱呱呱！青蛙叫！', color: '#4CAF50' },
-      { emoji: '🐔', name: '小鸡', sound: '叽叽！', voice: '叽叽叽！小鸡叫！', color: '#FFC107' },
-      { emoji: '🐑', name: '小羊', sound: '咩咩～', voice: '咩咩咩！小羊叫！', color: '#9E9E9E' },
-      { emoji: '🐼', name: '熊猫', sound: '竹竹你好！', voice: '熊猫！竹竹你好！', color: '#2E7D32' },
+      { emoji: '🐶', name: '小狗', sound: '真实汪汪声', voice: '这是小狗的声音！', color: '#FF9800' },
+      { emoji: '🐱', name: '小猫', sound: '真实喵喵声', voice: '这是小猫的声音！', color: '#42A5F5' },
+      { emoji: '🐮', name: '奶牛', sound: '真实哞哞声', voice: '这是奶牛的声音！', color: '#8D6E63' },
+      { emoji: '🐷', name: '小猪', sound: '真实哼哼声', voice: '这是小猪的声音！', color: '#E91E63' },
+      { emoji: '🐸', name: '青蛙', sound: '真实呱呱声', voice: '这是青蛙的声音！', color: '#4CAF50' },
+      { emoji: '🐔', name: '小鸡', sound: '真实鸡叫声', voice: '这是小鸡的声音！', color: '#FFC107' },
+      { emoji: '🐑', name: '小羊', sound: '真实咩咩声', voice: '这是小羊的声音！', color: '#9E9E9E' },
+      { emoji: '🐼', name: '熊猫', sound: '真实熊猫叫声', voice: '这是熊猫的声音！', color: '#2E7D32' },
     ];
 
     const grid = document.getElementById('animalsGrid');
@@ -132,7 +132,7 @@
         ZZ.vibrate(25);
 
         // 然后语音说名字
-        setTimeout(() => ZZ.speak(a.voice), 200);
+        setTimeout(() => ZZ.speak(a.voice), 900);
 
         // 弹出声音文字
         const bubble = document.createElement('div');
